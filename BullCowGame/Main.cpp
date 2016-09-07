@@ -14,6 +14,7 @@ using int32 = int;
 //function prototypes as outside a class
 void PrintIntro();
 void PlayGame();
+void GetGameDifficulty();
 FText GetValidGuess();
 bool AskToReplay();
 void PrintGameSummary();
@@ -27,6 +28,7 @@ int main()
 	do
 	{
 		PrintIntro();
+		GetGameDifficulty();
 		PlayGame();
 		bWantsToReplay = AskToReplay();
 	}
@@ -46,8 +48,7 @@ void PrintIntro()
 	std::cout << "        |     |    " << std::endl;
 	std::cout << "        (6___6)    " << std::endl;
 	std::cout << "         `---`     " << std::endl;
-	std::cout << "Can you guess the " << BCGame.GetHiddenWordLength();
-	std::cout << " letter isogram I'm thinking of?\n" << std::endl;
+	std::cout << "Can you guess the isogram I'm thinking of?\n" << std::endl;
 	return;
 }
 
@@ -55,6 +56,10 @@ void PrintIntro()
 void PlayGame()
 {
 	BCGame.Reset();
+	//moved from print intro because print intro showed wordlength
+	//picked at start. This shows wordlength after difficulty picked
+	std::cout << "\nThe hidden isogram has " << BCGame.GetHiddenWordLength() << " letters. Good luck!\n";
+	std::cout << std::endl;
 	int32 MaxTries = BCGame.GetMaxTries();
 
 	//loop asking for guesses while game NOT won
@@ -69,6 +74,36 @@ void PlayGame()
 		std::cout << ". Cows = " << BullCowCount.Cows << "\n\n";
 	}
 	PrintGameSummary();
+}
+
+//designed to set the game difficulty, which determines which isogram list the game chooses.
+void GetGameDifficulty()
+{
+	FText PlayerDifficulty = "";
+	int32 GameDifficulty;
+
+	//Prompt for difficulty 1=Easy, 2=Medium, 3=Hard
+	do {
+		std::cout << "\nSet the difficulty of the game.\n";
+		//BEGINNER
+		std::cout << "1 = " << "Beginner (4 letter words)\n";
+		//EASY
+		std::cout << "2 = ";
+		std::cout << "Easy (5 to 6 letter words)\n";
+		//MEDIUM
+		std::cout << "3 = ";
+		std::cout << "Medium (7 to 8 letter words)\n";
+		//HARD
+		std::cout << "4 = ";
+		std::cout << "Hard (9 to 12 letter words)\n";
+		std::cout << "\n";
+
+		//get and consume input and set difficulty to input.
+		std::getline(std::cin, PlayerDifficulty);	//Get console input	for difficulty.
+		GameDifficulty = std::stoi(PlayerDifficulty); //turn console input string into a sanitized integer
+	} while (GameDifficulty < 1 || GameDifficulty > 4); //while first character value != 1, 2, 3, 4
+
+	BCGame.SetDifficulty((int)GameDifficulty);	//set difficulty to requested.
 }
 
 //loop continually until user inputs valid guess
@@ -95,8 +130,8 @@ FText GetValidGuess()
 		case EGuessStatus::Not_Lowercase:
 			std::cout << "Please use lowercase.\n\n";
 			break;
-		case EGuessStatus::No_Numbers_Allowed:
-			std::cout << "No numbers!\n\n";
+		case EGuessStatus::Non_Alphabetical:
+			std::cout << "English alphabetical characters only.\n\n";
 			break;
 		default:
 			//assume guess valid
@@ -119,8 +154,14 @@ void PrintGameSummary() {
 	if (BCGame.IsGameWon())
 	{
 		std::cout << "Well Done - YOU WIN! \n";
+		std::cout << "You won in ";
+		std::cout << BCGame.GetCurrentTry() - 1;
+		std::cout << " out of " << BCGame.GetMaxTries() << " attemps! Your final score is: ";
+		std::cout << ((BCGame.GetGameDifficulty() * (BCGame.GetMaxTries() - BCGame.GetCurrentTry() + 2)) * 10);
 	}
 	else {
 		std::cout << "You Lose!\n";
+		std::cout << "Hidden isogram was " << BCGame.GetHiddenWord();
+		std::cout << std::endl;
 	}
 }
